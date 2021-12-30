@@ -6,7 +6,6 @@ const getFiles = (dir, suffix) => {
     })
 
     let commandFiles = []
-    console.log(dir)
 
     for (const file of files){
         if (file.isDirectory()){
@@ -14,10 +13,7 @@ const getFiles = (dir, suffix) => {
                 ...commandFiles,
                 ...getFiles(`${dir}/${file.name}`, suffix)
             ]
-
-            console.log('found dir '+ file.name)
         } else if (file.name.endsWith(suffix)) {
-            console.log('found file '+ file.name)
             commandFiles.push(`${dir}/${file.name}`)
         }
     }

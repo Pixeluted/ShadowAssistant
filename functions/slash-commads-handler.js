@@ -1,3 +1,4 @@
+const { MessageEmbed } = require('discord.js')
 const fs = require('fs')
 const getFiles = require('../get-files')
 
@@ -9,18 +10,16 @@ module.exports = (client) => {
     const GuildCommands = theTestingGuild.commands
     const GlobalCommands = client.application?.commands
 
-    const slashCommandsFiles = getFiles('./slash_commands')
-    console.log(slashCommandsFiles)
+    const slashCommandsFiles = getFiles('./slash_commands', '.js')
 
     const registeredCommands = {}
 
     for (const slashCommand of slashCommandsFiles){
         const split = slashCommand.replace(/\\/g, '/').split('/')
-        const commandName = split[split.length - 1].replace(fileSuffix, '')
+        const commandName = split[split.length - 1].replace('.js', '')
 
         let slashCommandFile = require(`../slash_commands/${commandName}`)
         if (slashCommandFile.default) slashCommandFile = slashCommandFile.default
-        console.log(slashCommandFile)
 
         if (slashCommandFile.guildOnly === true){
             GuildCommands?.create({
@@ -36,7 +35,7 @@ module.exports = (client) => {
             })
         }
 
-        registeredCommands[commandName.toLowerSpace()] = slashCommandFile
+        registeredCommands[commandName.toLowerCase()] = slashCommandFile
 
     }
 
@@ -50,6 +49,25 @@ module.exports = (client) => {
 
         const { commandName, options } = interaction
 
+        if (registeredCommands[commandName.toLowerCase()]){
+            
+            try {
+                registeredCommands[commandName.toLowerCase()].callback(interaction, options, client)
+            } catch (error) {
+                const ownerUser = client.users.cache.get('333625102836957199')
 
+                const errorEmbed = new MessageEmbed()
+                    .setTitle('**ERROR**')
+                    .setDescription('Error has occured in slash command handler! ERROR: ' + error.toString())
+                    .setColor('RED')
+
+                ownerUser.send({
+                    embeds: [errorEmbed]
+                })
+
+                console.log(error)
+            }
+
+        }
     })
 }
